@@ -87,9 +87,7 @@ export async function POST(request: NextRequest) {
       const isPlainTextMatch = password === user.passwordHash;
       console.log('Plain text match test:', isPlainTextMatch);
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
-    }
-
-    console.log('Password verified for user:', username);
+    }    console.log('Password verified for user:', username);
 
     // Create response first
     const response = NextResponse.json({ 
@@ -104,34 +102,57 @@ export async function POST(request: NextRequest) {
     // Create session with the response
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
     
-    console.log('Session before setting data:', session);
-    console.log('Session options:', {
+    console.log('🍪 Session options for saving:', {
       cookieName: sessionOptions.cookieName,
       secure: sessionOptions.cookieOptions?.secure,
       httpOnly: sessionOptions.cookieOptions?.httpOnly,
       sameSite: sessionOptions.cookieOptions?.sameSite,
-      domain: sessionOptions.cookieOptions?.domain
+      maxAge: sessionOptions.cookieOptions?.maxAge,
+      path: sessionOptions.cookieOptions?.path,
+      domain: sessionOptions.cookieOptions?.domain,
+      password: sessionOptions.password ? '[HIDDEN]' : 'NOT_SET'
     });
     
+    console.log('📋 Session before setting data:', JSON.stringify(session));
+    
+    // Set session data
     session.userId = user.id;
     session.username = user.username;
     session.role = user.role;
     session.isAuthenticated = true;
     
-    console.log('Session data set:', {
+    console.log('📝 Session data set:', {
       userId: session.userId,
       username: session.username,
       role: session.role,
-      isAuthenticated: session.isAuthenticated
+      isAuthenticated: session.isAuthenticated,
+      fullSession: JSON.stringify(session)
     });
     
-    await session.save();
-    console.log('Session saved successfully');
+    // Save session
+    try {
+      await session.save();
+      console.log('💾 Session saved successfully');
+      
+      // Verify session was saved by reading it back
+      const verifySession = await getIronSession<SessionData>(request, response, sessionOptions);
+      console.log('🔍 Session verification after save:', {
+        isAuthenticated: verifySession.isAuthenticated,
+        userId: verifySession.userId,
+        username: verifySession.username,
+        role: verifySession.role,
+        fullSession: JSON.stringify(verifySession)
+      });
+      
+    } catch (saveError) {
+      console.error('💥 Failed to save session:', saveError);
+      return NextResponse.json({ error: 'Session save failed' }, { status: 500 });
+    }
 
     // Update last login (optional)
     user.lastLogin = new Date().toISOString();
-    // You could save this back to the file if needed
-
+    
+    console.log('🎉 Login completed successfully for user:', username);
     return response;
 
   } catch (error) {

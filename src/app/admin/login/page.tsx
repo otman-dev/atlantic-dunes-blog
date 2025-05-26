@@ -15,19 +15,25 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('Submitting login form with username:', username);
+      console.log('🔐 Submitting login form with username:', username);
       const success = await login(username, password);
-      console.log('Login result:', success);
+      console.log('📊 Login result:', success);
       
       if (success) {
-        console.log('Login successful, redirecting to dashboard...');
-        router.push('/admin/dashboard');
+        console.log('✅ Login successful, redirecting to dashboard...');
+        
+        // Small delay to ensure session is fully saved
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Force a full page reload to ensure fresh session state
+        window.location.href = '/admin/dashboard';
+        return;
       } else {
-        console.log('Login failed');
+        console.log('❌ Login failed');
         setError('Invalid username or password');
       }
     } catch (error) {
-      console.log('Login exception:', error);
+      console.log('💥 Login exception:', error);
       setError('Login failed. Please try again.');
     }
     

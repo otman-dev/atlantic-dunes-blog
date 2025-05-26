@@ -5,28 +5,44 @@ import { sessionOptions, SessionData } from '@/lib/session';
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  console.log('Middleware triggered for:', pathname);
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('Request headers cookies:', request.headers.get('cookie'));
+  console.log('🔍 Middleware triggered for:', pathname);
+  console.log('🌍 Environment:', process.env.NODE_ENV);
+  console.log('🍪 Request cookies:', request.headers.get('cookie'));
+  console.log('🔑 Has SESSION_SECRET:', !!process.env.SESSION_SECRET);
+  console.log('🏠 Vercel URL:', process.env.VERCEL_URL);
   
   // Only protect admin routes (excluding login)
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
     try {
+      console.log('🔐 Checking authentication for protected route:', pathname);
+      
       const response = NextResponse.next();
       const session = await getIronSession<SessionData>(request, response, sessionOptions);
       
-      console.log('Session in middleware:', {
+      console.log('📊 Session details:', {
         isAuthenticated: session.isAuthenticated,
         userId: session.userId,
         username: session.username,
+        role: session.role,
         sessionKeys: Object.keys(session),
-        hasSessionSecret: !!process.env.SESSION_SECRET
+        sessionStringified: JSON.stringify(session),
+        cookieOptions: sessionOptions.cookieOptions
       });
       
-      // Check if session exists and is authenticated
-      if (!session.isAuthenticated || !session.userId) {
-        console.log('User not authenticated, redirecting to login');
-        console.log('Session state:', session);
+      // More comprehensive authentication check
+      const isSessionValid = session.isAuthenticated === true && 
+                           session.userId && 
+                           session.username;
+      
+      if (!isSessionValid) {
+        console.log('❌ User not authenticated or session invalid');
+        console.log('📝 Session validation details:', {
+          isAuthenticated: session.isAuthenticated,
+          hasUserId: !!session.userId,
+          hasUsername: !!session.username,
+          fullSession: session
+        });
+        
         const loginUrl = new URL('/admin/login', request.url);
         const redirectResponse = NextResponse.redirect(loginUrl);
         
@@ -36,13 +52,20 @@ export async function middleware(request: NextRequest) {
         return redirectResponse;
       }
       
-      console.log('User authenticated, proceeding to route');
+      console.log('✅ User authenticated successfully:', {
+        userId: session.userId,
+        username: session.username,
+        role: session.role
+      });
+      
       return response;
+      
     } catch (error) {
-      console.error('Middleware auth error:', error);
-      console.error('Error details:', {
+      console.error('💥 Middleware auth error:', error);
+      console.error('📋 Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined
       });
       
       // Redirect to login on any session error
@@ -56,6 +79,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  console.log('⏭️ Route does not require authentication, proceeding');
   return NextResponse.next();
 }
 

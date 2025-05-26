@@ -21,6 +21,7 @@ function getSessionSecret(): string {
   return secret;
 }
 
+// Enhanced session options for better Vercel compatibility
 export const sessionOptions: SessionOptions = {
   password: getSessionSecret(),
   cookieName: 'atlantic-dunes-session',
@@ -34,3 +35,14 @@ export const sessionOptions: SessionOptions = {
   },
   ttl: 60 * 60 * 24 * 7, // 1 week (session TTL)
 };
+
+// Helper function to get session with better error handling
+export async function getSession(request: any, response: any) {
+  try {
+    const { getIronSession } = await import('iron-session');
+    return await getIronSession<SessionData>(request, response, sessionOptions);
+  } catch (error) {
+    console.error('Failed to get session:', error);
+    return defaultSession;
+  }
+}
