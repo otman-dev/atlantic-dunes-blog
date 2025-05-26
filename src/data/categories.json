@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Pôle Eco-Bâtiment",
+    "slug": "pole-eco-batiment",
+    "description": "Construction éco-bâtiments, énergie et environnement. Solutions clé-en-main pour bâtiments durables.",
+    "color": "#10B981"
+  },
+  {
+    "id": 2,
+    "name": "Pôle Industrie",
+    "slug": "pole-industrie",
+    "description": "Bureaux d'étude spécialisés dans l'étude de risque, modélisation et analyses environnementales.",
+    "color": "#3B82F6"
+  },
+  {
+    "id": 3,
+    "name": "Pôle Eau",
+    "slug": "pole-eau",
+    "description": "Procédés de traitement et équipements spécialisés pour stations de traitement des eaux.",
+    "color": "#06B6D4"
+  },
+  {
+    "id": 4,
+    "name": "Pôle Déchets",
+    "slug": "pole-dechets",
+    "description": "Traitement et valorisation des déchets, équipements de tri et installations clé en main.",
+    "color": "#F59E0B"
+  },
+  {
+    "id": 5,
+    "name": "Pôle Air",
+    "slug": "pole-air",
+    "description": "Traitements de l'air et des gaz, solutions pour la qualité de l'air industriel.",
+    "color": "#8B5CF6"
+  },
+  {
+    "id": 6,
+    "name": "Pôle Energie",
+    "slug": "pole-energie",
+    "description": "Solutions d'optimisation énergétique et efficacité environnementale pour le tertiaire et l'industrie.",
+    "color": "#DC2626"
+  }
+]
