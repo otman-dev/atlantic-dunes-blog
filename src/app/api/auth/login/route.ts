@@ -15,17 +15,21 @@ interface User {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Login request received');
     const { username, password } = await request.json();
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
+    console.log('Attempting login for username:', username);
+
     // Read users from file
     const users = await readJsonFile<User[]>('users.json');
     const user = users.find(u => u.username === username);
 
     if (!user) {
+      console.log('User not found:', username);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -33,8 +37,13 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     
     if (!isValidPassword) {
+      console.log('Invalid password for user:', username);
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-    }    // Create response first
+    }
+
+    console.log('Password verified for user:', username);
+
+    // Create response first
     const response = NextResponse.json({ 
       success: true, 
       user: { 
@@ -46,11 +55,23 @@ export async function POST(request: NextRequest) {
 
     // Create session with the response
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
+    
+    console.log('Session before setting data:', session);
+    
     session.userId = user.id;
     session.username = user.username;
     session.role = user.role;
     session.isAuthenticated = true;
+    
+    console.log('Session data set:', {
+      userId: session.userId,
+      username: session.username,
+      role: session.role,
+      isAuthenticated: session.isAuthenticated
+    });
+    
     await session.save();
+    console.log('Session saved successfully');
 
     // Update last login (optional)
     user.lastLogin = new Date().toISOString();

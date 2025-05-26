@@ -4,10 +4,12 @@ import { getIronSession } from 'iron-session';
 import { sessionOptions, SessionData } from '@/lib/session';
 
 export async function middleware(request: NextRequest) {
-  console.log('Middleware triggered for:', request.nextUrl.pathname);
+  const pathname = request.nextUrl.pathname;
+  console.log('Middleware triggered for:', pathname);
+  console.log('Request headers cookies:', request.headers.get('cookie'));
   
-  // Only protect admin routes
-  if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
+  // Only protect admin routes (excluding login)
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
     try {
       const response = NextResponse.next();
       const session = await getIronSession<SessionData>(request, response, sessionOptions);
@@ -15,13 +17,16 @@ export async function middleware(request: NextRequest) {
       console.log('Session in middleware:', {
         isAuthenticated: session.isAuthenticated,
         userId: session.userId,
-        username: session.username
+        username: session.username,
+        sessionKeys: Object.keys(session)
       });
       
-      if (!session.isAuthenticated) {
+      // Check if session exists and is authenticated
+      if (!session.isAuthenticated || !session.userId) {
         console.log('User not authenticated, redirecting to login');
-        // Redirect to login page
-        return NextResponse.redirect(new URL('/admin/login', request.url));
+        console.log('Session state:', session);
+        const loginUrl = new URL('/admin/login', request.url);
+        return NextResponse.redirect(loginUrl);
       }
       
       console.log('User authenticated, proceeding to route');
@@ -29,7 +34,8 @@ export async function middleware(request: NextRequest) {
     } catch (error) {
       console.error('Middleware auth error:', error);
       // Redirect to login on any session error
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      const loginUrl = new URL('/admin/login', request.url);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

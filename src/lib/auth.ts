@@ -10,12 +10,14 @@ export interface AuthState {
 export async function login(username: string, password: string): Promise<boolean> {
   try {
     console.log('Attempting login for username:', username);
-    const response = await fetch('/api/auth/login', {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ username, password }),
+      credentials: 'include', // Include cookies
     });
 
     console.log('Login response status:', response.status);
