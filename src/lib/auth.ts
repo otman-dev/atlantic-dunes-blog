@@ -10,7 +10,22 @@ export interface AuthState {
 export async function login(username: string, password: string): Promise<boolean> {
   try {
     console.log('Attempting login for username:', username);
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+    
+    // Dynamic base URL for different environments
+    const getBaseUrl = () => {
+      if (typeof window !== 'undefined') {
+        // Client-side: use current origin
+        return window.location.origin;
+      }
+      // Server-side fallback
+      return process.env.NEXT_PUBLIC_API_URL || 
+             process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+             'http://localhost:3000';
+    };
+    
+    const baseUrl = getBaseUrl();
+    console.log('Using base URL:', baseUrl);
+    
     const response = await fetch(`${baseUrl}/api/auth/login`, {
       method: 'POST',
       headers: {

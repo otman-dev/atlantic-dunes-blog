@@ -3,6 +3,7 @@ import { getIronSession } from 'iron-session';
 import bcrypt from 'bcryptjs';
 import { sessionOptions, SessionData } from '@/lib/session';
 import { readJsonFile } from '@/lib/utils/fileSystem';
+import { checkEnvironment } from '@/lib/utils/environment';
 
 interface User {
   id: string;
@@ -16,6 +17,15 @@ interface User {
 export async function POST(request: NextRequest) {
   try {
     console.log('Login request received');
+    
+    // Check environment configuration
+    const envChecks = checkEnvironment();
+    
+    if (!envChecks.hasSessionSecret) {
+      console.error('SESSION_SECRET not configured!');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+    
     const { username, password } = await request.json();
 
     if (!username || !password) {
@@ -57,6 +67,13 @@ export async function POST(request: NextRequest) {
     const session = await getIronSession<SessionData>(request, response, sessionOptions);
     
     console.log('Session before setting data:', session);
+    console.log('Session options:', {
+      cookieName: sessionOptions.cookieName,
+      secure: sessionOptions.cookieOptions?.secure,
+      httpOnly: sessionOptions.cookieOptions?.httpOnly,
+      sameSite: sessionOptions.cookieOptions?.sameSite,
+      domain: sessionOptions.cookieOptions?.domain
+    });
     
     session.userId = user.id;
     session.username = user.username;

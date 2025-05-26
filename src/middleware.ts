@@ -6,6 +6,7 @@ import { sessionOptions, SessionData } from '@/lib/session';
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   console.log('Middleware triggered for:', pathname);
+  console.log('Environment:', process.env.NODE_ENV);
   console.log('Request headers cookies:', request.headers.get('cookie'));
   
   // Only protect admin routes (excluding login)
@@ -18,7 +19,8 @@ export async function middleware(request: NextRequest) {
         isAuthenticated: session.isAuthenticated,
         userId: session.userId,
         username: session.username,
-        sessionKeys: Object.keys(session)
+        sessionKeys: Object.keys(session),
+        hasSessionSecret: !!process.env.SESSION_SECRET
       });
       
       // Check if session exists and is authenticated
@@ -26,16 +28,31 @@ export async function middleware(request: NextRequest) {
         console.log('User not authenticated, redirecting to login');
         console.log('Session state:', session);
         const loginUrl = new URL('/admin/login', request.url);
-        return NextResponse.redirect(loginUrl);
+        const redirectResponse = NextResponse.redirect(loginUrl);
+        
+        // Clear any corrupted session cookie
+        redirectResponse.cookies.delete('atlantic-dunes-session');
+        
+        return redirectResponse;
       }
       
       console.log('User authenticated, proceeding to route');
       return response;
     } catch (error) {
       console.error('Middleware auth error:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
       // Redirect to login on any session error
       const loginUrl = new URL('/admin/login', request.url);
-      return NextResponse.redirect(loginUrl);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      
+      // Clear any corrupted session cookie
+      redirectResponse.cookies.delete('atlantic-dunes-session');
+      
+      return redirectResponse;
     }
   }
 
