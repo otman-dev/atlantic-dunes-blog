@@ -83,3 +83,54 @@ export async function createBackup(): Promise<string> {
     throw new Error('Failed to create backup');
   }
 }
+
+// Server-side post retrieval functions (for server components)
+export async function getPublishedPostsServer(): Promise<Post[]> {
+  try {
+    const posts = await readPosts();
+    return posts
+      .filter(post => post.published)
+      .map(post => ({
+        ...post,
+        createdAt: new Date(post.createdAt),
+        updatedAt: new Date(post.updatedAt)
+      }));
+  } catch (error) {
+    console.error('Error getting published posts:', error);
+    return [];
+  }
+}
+
+export async function getPostBySlugServer(slug: string): Promise<Post | null> {
+  try {
+    const posts = await readPosts();
+    const post = posts.find(p => p.slug === slug && p.published);
+    if (!post) return null;
+    
+    return {
+      ...post,
+      createdAt: new Date(post.createdAt),
+      updatedAt: new Date(post.updatedAt)
+    };
+  } catch (error) {
+    console.error('Error getting post by slug:', error);
+    return null;
+  }
+}
+
+export async function getPostByIdServer(id: string): Promise<Post | null> {
+  try {
+    const posts = await readPosts();
+    const post = posts.find(p => p.id === id);
+    if (!post) return null;
+    
+    return {
+      ...post,
+      createdAt: new Date(post.createdAt),
+      updatedAt: new Date(post.updatedAt)
+    };
+  } catch (error) {
+    console.error('Error getting post by id:', error);
+    return null;
+  }
+}

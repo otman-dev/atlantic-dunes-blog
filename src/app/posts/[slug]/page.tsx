@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
-import { getPostBySlug } from '@/lib/services/api';
+import { getPostBySlugServer } from '@/lib/utils/fileSystem';
 
 interface PostPageProps {
   params: Promise<{
@@ -10,7 +10,7 @@ interface PostPageProps {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
+  const post = await getPostBySlugServer(slug);
 
   if (!post) {
     notFound();
@@ -23,9 +23,8 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="flex items-center gap-4 mb-4">
             <span className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
               {post.category}
-            </span>
-            <time className="text-gray-500 text-sm">
-              {new Date(post.createdAt).toLocaleDateString('en-US', {
+            </span>            <time className="text-gray-500 text-sm">
+              {new Date(post.createdAt).toLocaleDateString('fr-FR', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'

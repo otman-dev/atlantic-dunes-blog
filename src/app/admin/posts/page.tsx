@@ -93,12 +93,10 @@ export default function PostsManagementPage() {
 
       if (!response.ok) {
         throw new Error('Failed to update post status');
-      }
-
-      // Update local state
+      }      // Update local state
       setPosts(posts.map(p => 
         p.id === postId 
-          ? { ...p, published: !currentStatus, updatedAt: new Date().toISOString() }
+          ? { ...p, published: !currentStatus, updatedAt: new Date() }
           : p
       ));
     } catch (error) {

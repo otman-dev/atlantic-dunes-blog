@@ -7,6 +7,7 @@ export interface Post {
   content: string;
   excerpt: string;
   category: string;
+  author: string;
   createdAt: Date;
   updatedAt: Date;
   published: boolean;

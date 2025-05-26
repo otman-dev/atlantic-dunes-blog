@@ -15,13 +15,13 @@ interface PostFormProps {
 export default function PostForm({ initialPost, onSubmit, isEdit = false }: PostFormProps) {
   const [categories, setCategories] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-  const [formData, setFormData] = useState({
+  const formRef = useRef<HTMLFormElement>(null);  const [formData, setFormData] = useState({
     title: initialPost?.title || '',
     slug: initialPost?.slug || '',
     content: initialPost?.content || '',
     excerpt: initialPost?.excerpt || '',
     category: initialPost?.category || '',
+    author: initialPost?.author || '',
     published: initialPost?.published || false
   });
 
@@ -138,8 +138,7 @@ export default function PostForm({ initialPost, onSubmit, isEdit = false }: Post
             <div>
               <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                 Category *
-              </label>
-              <select
+              </label>              <select
                 id="category"
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
@@ -153,7 +152,23 @@ export default function PostForm({ initialPost, onSubmit, isEdit = false }: Post
                   </option>
                 ))}
               </select>
-            </div>            <div className="flex items-center">
+            </div>
+
+            <div>
+              <label htmlFor="author" className="block text-sm font-medium text-gray-700 mb-2">
+                Author *
+              </label>
+              <input
+                type="text"
+                id="author"
+                value={formData.author}
+                onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Author name"
+                required              />
+            </div>
+
+            <div className="flex items-center">
               <div className="text-sm text-gray-600">
                 <span className="font-medium">Status:</span>{' '}
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

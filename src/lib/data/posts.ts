@@ -1,8 +1,7 @@
 import { Post } from '../types';
 
 // Sample posts data
-export const posts: Post[] = [
-  {
+export const posts: Post[] = [  {
     id: '1',
     title: 'Welcome to Atlantic Dunes Blog',
     slug: 'welcome-to-atlantic-dunes-blog',
@@ -20,11 +19,11 @@ This is our first blog post! We're excited to share our thoughts and experiences
 Stay tuned for more content!`,
     excerpt: 'Welcome to our blog! We\'re excited to share our journey with you.',
     category: 'Lifestyle',
+    author: 'Atlantic Dunes Team',
     createdAt: new Date('2024-01-15'),
     updatedAt: new Date('2024-01-15'),
     published: true
-  },
-  {
+  },  {
     id: '2',
     title: 'The Future of Web Development',
     slug: 'future-of-web-development',
@@ -41,11 +40,11 @@ Web development is rapidly evolving with new frameworks and technologies emergin
 The future looks bright for web developers!`,
     excerpt: 'Exploring the latest trends in web development and what the future holds.',
     category: 'Technology',
+    author: 'Tech Team',
     createdAt: new Date('2024-01-20'),
     updatedAt: new Date('2024-01-20'),
     published: true
-  },
-  {
+  },  {
     id: '3',
     title: 'Hidden Gems of Coastal Portugal',
     slug: 'hidden-gems-coastal-portugal',
@@ -62,11 +61,11 @@ Portugal's coastline offers some of Europe's most stunning and undiscovered beac
 Each location offers unique experiences and breathtaking views.`,
     excerpt: 'Discover the most beautiful hidden beaches and coastal towns in Portugal.',
     category: 'Travel',
+    author: 'Travel Writer',
     createdAt: new Date('2024-01-25'),
     updatedAt: new Date('2024-01-25'),
     published: true
-  },
-  {
+  },  {
     id: '4',
     title: 'Mastering the Art of Sourdough',
     slug: 'mastering-art-of-sourdough',
@@ -89,11 +88,11 @@ Creating the perfect sourdough bread is both science and art. Here's your comple
 The result is worth every moment of effort!`,
     excerpt: 'Learn the secrets to creating perfect sourdough bread from scratch.',
     category: 'Food',
+    author: 'Chef Baker',
     createdAt: new Date('2024-02-01'),
     updatedAt: new Date('2024-02-01'),
     published: true
-  },
-  {
+  },  {
     id: '5',
     title: 'Building Scalable React Applications',
     slug: 'building-scalable-react-applications',
@@ -118,6 +117,7 @@ As your React application grows, maintaining clean and scalable code becomes cru
 Planning for scale from the beginning saves countless hours later.`,
     excerpt: 'Essential strategies for building React applications that scale with your team and users.',
     category: 'Technology',
+    author: 'Senior Developer',
     createdAt: new Date('2024-02-05'),
     updatedAt: new Date('2024-02-05'),
     published: false // Draft post
