@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import PostForm from '@/components/PostForm';
-import { createPost } from '@/lib/data';
-import type { Post } from '@/lib/data';
+import { createPost } from '@/lib/services/api';
+import type { Post } from '@/lib/types';
 
 export default function CreatePostPage() {
   const router = useRouter();

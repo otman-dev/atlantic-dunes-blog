@@ -70,5 +70,17 @@
     "published": true,
     "createdAt": "2024-11-15T14:45:00Z",
     "updatedAt": "2024-11-15T14:45:00Z"
+  },
+  {
+    "title": "x",
+    "slug": "x",
+    "content": "x",
+    "excerpt": "x",
+    "category": "Pôle Eco-Bâtiment",
+    "author": "x",
+    "published": true,
+    "id": "1748294509456",
+    "createdAt": "2025-05-26T21:21:49.456Z",
+    "updatedAt": "2025-05-26T21:21:59.522Z"
   }
 ]
