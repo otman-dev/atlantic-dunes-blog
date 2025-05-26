@@ -11,11 +11,21 @@ export const defaultSession: SessionData = {
   isAuthenticated: false,
 };
 
+// Get the session secret with fallback
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    console.warn('SESSION_SECRET not found, using fallback (not recommended for production)');
+    return 'fallback_session_secret_at_least_32_characters_long_for_security_purposes';
+  }
+  return secret;
+}
+
 export const sessionOptions: SessionOptions = {
-  password: process.env.SESSION_SECRET || 'complex_password_at_least_32_characters_long_for_security',
+  password: getSessionSecret(),
   cookieName: 'atlantic-dunes-session',
   cookieOptions: {
-    secure: process.env.NODE_ENV === 'production', // Always secure in production (Vercel uses HTTPS)
+    secure: process.env.NODE_ENV === 'production' || !!process.env.VERCEL_URL, // Always secure on Vercel
     httpOnly: true,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 1 week
