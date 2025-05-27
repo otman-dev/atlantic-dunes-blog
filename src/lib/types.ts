@@ -6,8 +6,8 @@ export interface Post {
   slug: string;
   content: string;
   excerpt: string;
-  category: string;
   author: string;
+  category: string;
   createdAt: Date;
   updatedAt: Date;
   published: boolean;

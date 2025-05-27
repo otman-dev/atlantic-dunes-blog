@@ -3,15 +3,25 @@
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import PostForm from '@/components/PostForm';
-import { createPost } from '@/lib/services/api';
 import type { Post } from '@/lib/types';
 
 export default function CreatePostPage() {
   const router = useRouter();
+
   const handleSubmit = async (postData: Omit<Post, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      await createPost(postData);
-      router.push('/admin/dashboard');
+      const response = await fetch('/api/admin/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData)
+      });
+
+      if (response.ok) {
+        router.push('/admin/dashboard');
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create post');
+      }
     } catch (error) {
       console.error('Error creating post:', error);
       alert('Error creating post. Please try again.');

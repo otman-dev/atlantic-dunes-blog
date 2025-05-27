@@ -2,39 +2,38 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/auth';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();  const handleSubmit = async (e: React.FormEvent) => {
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      console.log('🔐 Submitting login form with username:', username);
-      const success = await login(username, password);
-      console.log('📊 Login result:', success);
-      
-      if (success) {
-        console.log('✅ Login successful, redirecting to dashboard...');
-        
-        // Small delay to ensure session is fully saved
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Force a full page reload to ensure fresh session state
-        window.location.href = '/admin/dashboard';
-        return;
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        router.push('/admin/dashboard');
       } else {
-        console.log('❌ Login failed');
-        setError('Invalid username or password');
+        setError(data.error || 'Login failed');
       }
     } catch (error) {
-      console.log('💥 Login exception:', error);
-      setError('Login failed. Please try again.');
+      console.error('Login error:', error);
+      setError('An error occurred during login');
     }
     
     setLoading(false);
@@ -104,10 +103,11 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
-        </form>          <div className="text-center">
+        </form>
+          <div className="text-center">
           <p className="text-sm text-gray-600">
             Demo credentials: <br />
-            <code className="bg-gray-100 px-2 py-1 rounded">admin / admin123</code>
+            <code className="bg-gray-100 px-2 py-1 rounded">admin / admin</code>
           </p>
         </div>
       </div>

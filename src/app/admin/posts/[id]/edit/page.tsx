@@ -16,14 +16,15 @@ interface EditPostPageProps {
 export default function EditPostPage({ params }: EditPostPageProps) {
   const router = useRouter();
   const [post, setPost] = useState<Post | null>(null);
-  const [loading, setLoading] = useState(true);  useEffect(() => {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
     async function loadPost() {
       try {
         const { id } = await params;
         const response = await fetch(`/api/posts/${id}`);
         if (response.ok) {
           const foundPost = await response.json();
-          setPost(foundPost);
+          setPost(foundPost || null);
         } else {
           setPost(null);
         }
@@ -54,22 +55,22 @@ export default function EditPostPage({ params }: EditPostPageProps) {
 
   if (!post) {
     notFound();
-  }  const handleSubmit = async (postData: Omit<Post, 'id' | 'createdAt' | 'updatedAt'>) => {
+  }
+  const handleSubmit = async (postData: Omit<Post, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       const { id } = await params;
-      const response = await fetch(`/api/posts/${id}`, {
+      const response = await fetch(`/api/admin/posts?id=${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(postData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData)
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update post');
+      if (response.ok) {
+        router.push('/admin/dashboard');
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update post');
       }
-
-      router.push('/admin/dashboard');
     } catch (error) {
       console.error('Error updating post:', error);
       alert('Error updating post. Please try again.');

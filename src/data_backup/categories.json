@@ -1,0 +1,37 @@
+[
+  {
+    "id": "1",
+    "name": "Photography",
+    "slug": "photography",
+    "description": "Tips, tutorials, and inspiration for capturing the beauty of coastal landscapes and Atlantic dune photography.",
+    "color": "#3B82F6"
+  },
+  {
+    "id": "2",
+    "name": "Travel",
+    "slug": "travel",
+    "description": "Discover hidden trails, secret spots, and adventure opportunities along the Atlantic coastline.",
+    "color": "#10B981"
+  },
+  {
+    "id": "3",
+    "name": "Food",
+    "slug": "food",
+    "description": "Explore the best restaurants, local cuisine, and culinary experiences along the Atlantic coast.",
+    "color": "#F59E0B"
+  },
+  {
+    "id": "4",
+    "name": "Lifestyle",
+    "slug": "lifestyle",
+    "description": "Learn about coastal living, wellness, and making the most of life by the Atlantic ocean.",
+    "color": "#8B5CF6"
+  },
+  {
+    "id": "5",
+    "name": "Technology",
+    "slug": "technology",
+    "description": "Tech innovations, digital tools, and technology that enhances coastal experiences.",
+    "color": "#EF4444"
+  }
+]

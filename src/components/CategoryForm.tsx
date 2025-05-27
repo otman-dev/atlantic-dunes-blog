@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import slugify from 'slugify';
-import { Category } from '@/lib/data';
+import type { Category } from '@/lib/types';
 
 interface CategoryFormProps {
   initialCategory?: Category;

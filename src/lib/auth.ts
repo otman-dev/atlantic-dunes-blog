@@ -1,101 +1,59 @@
+// Simple hardcoded authentication
+export const ADMIN_CREDENTIALS = {
+  username: 'admin',
+  password: 'admin'
+};
+
 export interface AuthState {
   isAuthenticated: boolean;
   user?: {
-    id: string;
     username: string;
-    role: string;
   };
 }
 
-export async function login(username: string, password: string): Promise<boolean> {
-  try {
-    console.log('Attempting login for username:', username);
-    
-    // Dynamic base URL for different environments
-    const getBaseUrl = () => {
-      if (typeof window !== 'undefined') {
-        // Client-side: use current origin
-        return window.location.origin;
-      }
-      // Server-side fallback
-      return process.env.NEXT_PUBLIC_API_URL || 
-             process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-             'http://localhost:3000';
-    };
-    
-    const baseUrl = getBaseUrl();
-    console.log('Using base URL:', baseUrl);
-    
-    const response = await fetch(`${baseUrl}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-      credentials: 'include', // Include cookies
-    });
+// In a real app, you'd use proper session management, JWT tokens, etc.
+// For this demo, we'll use localStorage (client-side only)
 
-    console.log('Login response status:', response.status);
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Login response data:', data);
-      return true;
-    } else {
-      const errorData = await response.json();
-      console.log('Login error response:', errorData);
+export function login(username: string, password: string): boolean {
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('username', username);
     }
-    
-    return false;
-  } catch (error) {
-    console.error('Login error:', error);
-    return false;
+    return true;
+  }
+  return false;
+}
+
+export function logout(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('username');
   }
 }
 
-export async function logout(): Promise<void> {
-  try {
-    console.log('Starting logout process...');
-    const response = await fetch('/api/auth/logout', {
-      method: 'POST',
-    });
-    console.log('Logout response status:', response.status);
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Logout response data:', data);
-    } else {
-      console.error('Logout failed with status:', response.status);
-    }
-  } catch (error) {
-    console.error('Logout error:', error);
+export function isAuthenticated(): boolean {
+  if (typeof window === 'undefined') {
+    return false; // Server-side, assume not authenticated
   }
+  return localStorage.getItem('isAuthenticated') === 'true';
 }
 
-export async function isAuthenticated(): Promise<boolean> {
-  try {
-    const response = await fetch('/api/auth/session');
-    if (response.ok) {
-      const data = await response.json();
-      return data.isAuthenticated;
-    }
-    return false;
-  } catch (error) {
-    console.error('Auth check error:', error);
-    return false;
-  }
-}
-
-export async function getCurrentUser(): Promise<AuthState['user'] | null> {
-  try {
-    const response = await fetch('/api/auth/session');
-    if (response.ok) {
-      const data = await response.json();
-      return data.isAuthenticated ? data.user : null;
-    }
-    return null;
-  } catch (error) {
-    console.error('Get user error:', error);
+export function getCurrentUser(): { username: string } | null {
+  if (typeof window === 'undefined') {
     return null;
   }
+  
+  const username = localStorage.getItem('username');
+  const authenticated = localStorage.getItem('isAuthenticated') === 'true';
+  
+  if (authenticated && username) {
+    return { username };
+  }
+  
+  return null;
+}
+
+export function requireAuth(): boolean {
+  return isAuthenticated();
 }

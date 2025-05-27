@@ -1,0 +1,20 @@
+{
+  "totalPosts": 5,
+  "publishedPosts": 4,
+  "draftPosts": 1,
+  "totalCategories": 5,
+  "totalViews": 3226,
+  "monthlyViews": [
+    { "month": "2024-09", "views": 450 },
+    { "month": "2024-10", "views": 670 },
+    { "month": "2024-11", "views": 890 },
+    { "month": "2024-12", "views": 1216 }
+  ],
+  "popularPosts": [
+    { "id": "1", "title": "The Ultimate Guide to Coastal Photography", "views": 1250 },
+    { "id": "2", "title": "Exploring Hidden Coastal Trails", "views": 890 },
+    { "id": "3", "title": "Best Seafood Restaurants", "views": 654 },
+    { "id": "4", "title": "Wildlife Watching: Bird Migration", "views": 432 }
+  ],
+  "lastUpdated": "2024-12-20T15:30:00Z"
+}

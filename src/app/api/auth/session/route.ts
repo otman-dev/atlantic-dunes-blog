@@ -1,32 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getIronSession } from 'iron-session';
-import { sessionOptions, SessionData } from '@/lib/session';
+import { cookies } from 'next/headers';
+import { sessionOptions, SessionData } from '@/lib/services/session';
+import { getUserById } from '@/lib/services/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const response = NextResponse.json({ isAuthenticated: false });
-    const session = await getIronSession<SessionData>(request, response, sessionOptions);
-
-    console.log('Session check - session data:', {
-      isAuthenticated: session.isAuthenticated,
-      userId: session.userId,
-      username: session.username
-    });
-
-    if (!session.isAuthenticated) {
-      return NextResponse.json({ isAuthenticated: false }, { status: 401 });
+    const cookieStore = await cookies();
+    const session = await getIronSession<SessionData>(cookieStore, sessionOptions);
+    
+    if (!session.isAuthenticated || !session.userId) {
+      return NextResponse.json({ 
+        isAuthenticated: false,
+        user: null 
+      });
     }
-
-    return NextResponse.json({
+    
+    const user = await getUserById(session.userId);
+      return NextResponse.json({
       isAuthenticated: true,
-      user: {
-        id: session.userId,
-        username: session.username,
-        role: session.role
-      }
+      role: session.role,
+      user: user ? {
+        id: user.id,
+        username: user.username,
+        role: user.role
+      } : null
     });
   } catch (error) {
-    console.error('Session check error:', error);
-    return NextResponse.json({ isAuthenticated: false }, { status: 500 });
+    console.error('Session error:', error);
+    return NextResponse.json({
+      isAuthenticated: false,
+      user: null
+    });
   }
 }

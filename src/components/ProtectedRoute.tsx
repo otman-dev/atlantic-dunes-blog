@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { isAuthenticated } from '@/lib/auth';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -12,14 +11,17 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const router = useRouter();
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const auth = await isAuthenticated();
-        setAuthenticated(auth);
+        const response = await fetch('/api/auth/session');
+        const data = await response.json();
+        
+        setAuthenticated(data.isAuthenticated && data.role === 'admin');
         setLoading(false);
         
-        if (!auth) {
+        if (!data.isAuthenticated || data.role !== 'admin') {
           router.push('/admin/login');
         }
       } catch (error) {

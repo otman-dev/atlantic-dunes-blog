@@ -1,7 +1,8 @@
-import { Post, Category, SearchOptions, PaginatedResult } from '../types';
-import { getAllPosts, getAllCategories } from './api';
+import { Post, SearchOptions, PaginatedResult } from '../types';
+import { getPostsCollection, initializeDatabase } from '../mongodb';
+import { getCategoryBySlug } from './queries';
 
-export async function searchPosts(options: SearchOptions = {}): Promise<PaginatedResult<Post>> {
+export async function searchPostsPaginated(options: SearchOptions = {}): Promise<PaginatedResult<Post>> {
   const {
     query = '',
     category,
@@ -11,52 +12,49 @@ export async function searchPosts(options: SearchOptions = {}): Promise<Paginate
     sortOrder = 'desc'
   } = options;
 
-  const allPosts = await getAllPosts();
-  let filteredPosts = allPosts.filter((post: Post) => post.published);
-
-  // Search in title, excerpt, and content
+  await initializeDatabase();
+  const postsCollection = await getPostsCollection();
+  
+  // Build MongoDB query
+  const mongoQuery: any = { published: true };
+  
+  // Add search conditions
   if (query) {
-    const searchTerm = query.toLowerCase();
-    filteredPosts = filteredPosts.filter(post =>
-      post.title.toLowerCase().includes(searchTerm) ||
-      post.excerpt.toLowerCase().includes(searchTerm) ||
-      post.content.toLowerCase().includes(searchTerm)
-    );
+    mongoQuery.$or = [
+      { title: { $regex: query, $options: 'i' } },
+      { excerpt: { $regex: query, $options: 'i' } },
+      { content: { $regex: query, $options: 'i' } }
+    ];
   }
-
+  
   // Filter by category
   if (category && category !== 'all') {
-    const categories = await getAllCategories();
-    const categoryObj = categories.find((cat: Category) => cat.slug === category);
+    const categoryObj = await getCategoryBySlug(category);
     if (categoryObj) {
-      filteredPosts = filteredPosts.filter(post => post.category === categoryObj.name);
+      mongoQuery.category = categoryObj.name;
     }
   }
-
-  // Sort posts
-  filteredPosts.sort((a, b) => {
-    let aValue: any = a[sortBy];
-    let bValue: any = b[sortBy];
-
-    if (sortBy === 'createdAt' || sortBy === 'updatedAt') {
-      aValue = new Date(aValue).getTime();
-      bValue = new Date(bValue).getTime();
-    }
-
-    if (sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1;
-    } else {
-      return aValue < bValue ? 1 : -1;
-    }
-  });
-
-  const total = filteredPosts.length;
+  
+  // Build sort option
+  const sortOption: any = {};
+  sortOption[sortBy] = sortOrder === 'asc' ? 1 : -1;
+  
+  // Get total count
+  const total = await postsCollection.countDocuments(mongoQuery);
+  
+  // Get paginated results
+  const posts = await postsCollection
+    .find(mongoQuery)
+    .sort(sortOption)
+    .skip(offset)
+    .limit(limit)
+    .toArray();
+  
   const totalPages = Math.ceil(total / limit);
   const page = Math.floor(offset / limit) + 1;
-  const paginatedPosts = filteredPosts.slice(offset, offset + limit);
-
+  
   return {
-    data: paginatedPosts,
+    data: posts.map((post: any) => ({ ...post, _id: undefined } as Post)),
     total,
     page,
     limit,

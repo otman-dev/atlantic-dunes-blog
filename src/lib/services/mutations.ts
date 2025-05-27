@@ -1,99 +1,99 @@
-import slugify from 'slugify';
 import { Post, Category } from '../types';
-import { readPosts, writePosts, readCategories, writeCategories, createBackup } from '../utils/fileSystem';
+import { getPostsCollection, getCategoriesCollection, initializeDatabase } from '../mongodb';
 
-// Post CRUD operations
+// Post mutations
 export async function createPost(postData: Omit<Post, 'id' | 'createdAt' | 'updatedAt'>): Promise<Post> {
-  const posts = await readPosts();
+  await initializeDatabase();
+  const postsCollection = await getPostsCollection();
   
+  const postId = Date.now().toString();
   const newPost: Post = {
     ...postData,
-    id: Date.now().toString(),
+    id: postId,
     createdAt: new Date(),
     updatedAt: new Date()
   };
   
-  posts.push(newPost);
-  await writePosts(posts);
-  return newPost;
+  await postsCollection.insertOne(newPost);
+  return { ...newPost, _id: undefined } as Post;
 }
 
-export async function updatePost(id: string, updates: Partial<Omit<Post, 'id' | 'createdAt'>>): Promise<Post | null> {
-  const posts = await readPosts();
-  const postIndex = posts.findIndex((post: Post) => post.id === id);
-  if (postIndex === -1) return null;
+export async function updatePost(id: string, postData: Partial<Post>): Promise<Post | null> {
+  await initializeDatabase();
+  const postsCollection = await getPostsCollection();
   
-  posts[postIndex] = {
-    ...posts[postIndex],
-    ...updates,
+  const updateData = {
+    ...postData,
     updatedAt: new Date()
   };
   
-  await writePosts(posts);
-  return posts[postIndex];
+  const result = await postsCollection.updateOne(
+    { id },
+    { $set: updateData }
+  );
+  
+  if (result.matchedCount === 0) {
+    return null;
+  }
+  
+  const updatedPost = await postsCollection.findOne({ id });
+  return updatedPost ? { ...updatedPost, _id: undefined } as Post : null;
 }
 
 export async function deletePost(id: string): Promise<boolean> {
-  await createBackup(); // Create backup before deletion
+  await initializeDatabase();
+  const postsCollection = await getPostsCollection();
   
-  const posts = await readPosts();
-  const postIndex = posts.findIndex((post: Post) => post.id === id);
-  if (postIndex === -1) return false;
-  
-  posts.splice(postIndex, 1);
-  await writePosts(posts);
-  return true;
+  const result = await postsCollection.deleteOne({ id });
+  return result.deletedCount > 0;
 }
 
-// Category CRUD operations
+// Category mutations
 export async function createCategory(categoryData: Omit<Category, 'id'>): Promise<Category> {
-  const categories = await readCategories();
+  await initializeDatabase();
+  const categoriesCollection = await getCategoriesCollection();
   
+  const categoryId = Date.now().toString();
   const newCategory: Category = {
     ...categoryData,
-    id: (Math.max(...categories.map((c: any) => c.id || 0), 0) + 1).toString(),
-    slug: categoryData.slug || slugify(categoryData.name, { lower: true, strict: true })
+    id: categoryId
   };
   
-  categories.push(newCategory);
-  await writeCategories(categories);
-  return newCategory;
+  await categoriesCollection.insertOne(newCategory);
+  return { ...newCategory, _id: undefined } as Category;
 }
 
-export async function updateCategory(id: string, updates: Partial<Omit<Category, 'id'>>): Promise<Category | null> {
-  const categories = await readCategories();
-  const categoryIndex = categories.findIndex((category: any) => category.id.toString() === id);
-  if (categoryIndex === -1) return null;
+export async function updateCategory(id: string, categoryData: Partial<Category>): Promise<Category | null> {
+  await initializeDatabase();
+  const categoriesCollection = await getCategoriesCollection();
   
-  categories[categoryIndex] = {
-    ...categories[categoryIndex],
-    ...updates,
-    slug: updates.slug || categories[categoryIndex].slug
-  };
+  const result = await categoriesCollection.updateOne(
+    { id },
+    { $set: categoryData }
+  );
   
-  await writeCategories(categories);
-  return categories[categoryIndex];
+  if (result.matchedCount === 0) {
+    return null;
+  }
+  
+  const updatedCategory = await categoriesCollection.findOne({ id });
+  return updatedCategory ? { ...updatedCategory, _id: undefined } as Category : null;
 }
 
 export async function deleteCategory(id: string): Promise<boolean> {
-  const categories = await readCategories();
-  const posts = await readPosts();
-  
-  const categoryIndex = categories.findIndex((category: any) => category.id.toString() === id);
-  if (categoryIndex === -1) return false;
+  await initializeDatabase();
+  const categoriesCollection = await getCategoriesCollection();
+  const postsCollection = await getPostsCollection();
   
   // Check if any posts use this category
-  const categoryName = categories[categoryIndex].name;
-  const postsUsingCategory = posts.some((post: Post) => {
-    return post.category === categoryName;
-  });
-  
-  if (postsUsingCategory) {
-    throw new Error('Cannot delete category that is being used by posts');
+  const category = await categoriesCollection.findOne({ id });
+  if (category) {
+    const postsWithCategory = await postsCollection.countDocuments({ category: category.name });
+    if (postsWithCategory > 0) {
+      throw new Error('Cannot delete category that is being used by posts');
+    }
   }
   
-  await createBackup(); // Create backup before deletion
-  categories.splice(categoryIndex, 1);
-  await writeCategories(categories);
-  return true;
+  const result = await categoriesCollection.deleteOne({ id });
+  return result.deletedCount > 0;
 }

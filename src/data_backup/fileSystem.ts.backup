@@ -1,0 +1,168 @@
+import fs from 'fs/promises';
+import path from 'path';
+import { Post, Category } from '@/lib/types';
+
+const DATA_DIR = path.join(process.cwd(), 'src', 'data');
+
+// Ensure data directory exists
+export async function ensureDataDirectory() {
+  try {
+    await fs.access(DATA_DIR);
+  } catch {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+  }
+}
+
+// Generic file operations
+export async function readJsonFile<T>(filename: string, defaultValue?: T): Promise<T> {
+  try {
+    await ensureDataDirectory();
+    const filePath = path.join(DATA_DIR, filename);
+    const fileContent = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(fileContent);
+  } catch (error) {
+    // If file doesn't exist and we have a default value, return it
+    if (defaultValue !== undefined && (error as any).code === 'ENOENT') {
+      console.log(`File ${filename} doesn't exist, using default value`);
+      return defaultValue;
+    }
+    console.error(`Error reading ${filename}:`, error);
+    throw new Error(`Failed to read ${filename}`);
+  }
+}
+
+export async function writeJsonFile<T>(filename: string, data: T): Promise<void> {
+  try {
+    await ensureDataDirectory();
+    const filePath = path.join(DATA_DIR, filename);
+    const jsonContent = JSON.stringify(data, null, 2);
+    await fs.writeFile(filePath, jsonContent, 'utf-8');
+  } catch (error) {
+    console.error(`Error writing ${filename}:`, error);
+    throw new Error(`Failed to write ${filename}`);
+  }
+}
+
+// Posts file operations
+export async function readPosts(): Promise<Post[]> {
+  return readJsonFile<Post[]>('posts.json', []);
+}
+
+export async function writePosts(posts: Post[]): Promise<void> {
+  return writeJsonFile('posts.json', posts);
+}
+
+// Categories file operations
+export async function readCategories(): Promise<Category[]> {
+  return readJsonFile<Category[]>('categories.json', []);
+}
+
+export async function writeCategories(categories: Category[]): Promise<void> {
+  return writeJsonFile('categories.json', categories);
+}
+
+// Analytics file operations
+export async function readAnalytics(): Promise<any> {
+  const defaultAnalytics = {
+    totalPosts: 0,
+    publishedPosts: 0,
+    draftPosts: 0,
+    totalCategories: 0,
+    totalViews: 0,
+    monthlyViews: [],
+    popularPosts: [],
+    lastUpdated: new Date().toISOString()
+  };
+  return readJsonFile('analytics.json', defaultAnalytics);
+}
+
+export async function writeAnalytics(analytics: any): Promise<void> {
+  return writeJsonFile('analytics.json', analytics);
+}
+
+// Backup functionality
+export async function createBackup(): Promise<string> {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupDir = path.join(DATA_DIR, 'backups');
+  
+  try {
+    await fs.mkdir(backupDir, { recursive: true });
+    
+    const posts = await readPosts();
+    const categories = await readCategories();
+    const analytics = await readAnalytics();
+    
+    const backupData = {
+      posts,
+      categories,
+      analytics,
+      timestamp: new Date().toISOString()
+    };
+    
+    const backupFilename = `backup-${timestamp}.json`;
+    const backupPath = path.join(backupDir, backupFilename);
+    
+    await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
+    return backupFilename;
+  } catch (error) {
+    console.error('Error creating backup:', error);
+    throw new Error('Failed to create backup');
+  }
+}
+
+// Data validation
+export function validatePost(post: Partial<Post>): post is Post {
+  return !!(
+    post.title &&
+    post.slug &&
+    post.content &&
+    post.author &&
+    post.category &&
+    typeof post.published === 'boolean'
+  );
+}
+
+export function validateCategory(category: Partial<Category>): category is Category {
+  return !!(
+    category.name &&
+    category.slug &&
+    category.description
+  );
+}
+
+// Initialize data files if they don't exist
+export async function initializeDataFiles(): Promise<void> {
+  try {
+    await ensureDataDirectory();
+    
+    // Check if files exist, create default data if not
+    const filesToCheck = ['posts.json', 'categories.json', 'analytics.json'];
+    
+    for (const filename of filesToCheck) {
+      const filePath = path.join(DATA_DIR, filename);
+      try {
+        await fs.access(filePath);
+      } catch {
+        // File doesn't exist, create with default data
+        if (filename === 'posts.json') {
+          await writeJsonFile(filename, []);
+        } else if (filename === 'categories.json') {
+          await writeJsonFile(filename, []);
+        } else if (filename === 'analytics.json') {
+          await writeJsonFile(filename, {
+            totalPosts: 0,
+            publishedPosts: 0,
+            draftPosts: 0,
+            totalCategories: 0,
+            totalViews: 0,
+            monthlyViews: [],
+            popularPosts: [],
+            lastUpdated: new Date().toISOString()
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing data files:', error);
+  }
+}
